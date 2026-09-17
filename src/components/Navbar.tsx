@@ -56,6 +56,7 @@ export const Navbar: React.FC = () => {
         { id: 'products', label: 'Available Products', icon: Package },
         { id: 'sales', label: 'My Sales & Memos', icon: ShoppingCart },
         { id: 'due', label: 'My Due & Payments', icon: DollarSign },
+        { id: 'settings', label: 'Profile & Settings', icon: Settings },
       ];
 
   return (
@@ -170,12 +171,20 @@ export const Navbar: React.FC = () => {
               {/* User Profile Pill */}
               {currentUser && (
                 <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
-                  <div className="w-8 h-8 rounded-full bg-purple-100 border border-purple-200 flex items-center justify-center text-purple-700 font-bold text-xs">
-                    {currentUser.name.charAt(0)}
-                  </div>
-                  <div className="hidden sm:block text-left">
-                    <div className="text-xs font-semibold text-slate-800 leading-tight">{currentUser.name}</div>
-                    <div className="text-[10px] text-slate-600">{currentUser.phone}</div>
+                  <div
+                    onClick={() => setActiveTab('settings')}
+                    className="flex items-center gap-2 cursor-pointer hover:opacity-85 transition-opacity group"
+                    title="Account Settings & Security"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-purple-100 border border-purple-200 flex items-center justify-center text-purple-700 font-bold text-xs group-hover:scale-105 transition-transform">
+                      {currentUser.name.charAt(0)}
+                    </div>
+                    <div className="hidden sm:block text-left">
+                      <div className="text-xs font-semibold text-slate-800 leading-tight group-hover:text-purple-700 transition-colors">
+                        {currentUser.name}
+                      </div>
+                      <div className="text-[10px] text-slate-600">{currentUser.phone}</div>
+                    </div>
                   </div>
 
                   <button

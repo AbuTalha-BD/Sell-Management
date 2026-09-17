@@ -12,6 +12,7 @@ export interface User {
   totalSales: number;
   totalPaid: number;
   currentDue: number;
+  email?: string;
   address?: string;
   joinedDate: string;
   createdAt?: string;

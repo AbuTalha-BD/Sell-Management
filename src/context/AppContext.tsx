@@ -109,6 +109,8 @@ interface AppContextType {
   markNotificationsAsRead: () => Promise<void>;
   syncWithGoogleSheets: (scriptUrl?: string) => Promise<boolean>;
   updateSettings: (newSettings: Partial<BusinessSettings>) => Promise<boolean>;
+  updateProfile: (data: { email?: string; address?: string }) => Promise<boolean>;
+  changePassword: (oldPassword: string, newPassword: string) => Promise<boolean>;
   refreshData: () => Promise<void>;
 }
 
@@ -615,6 +617,65 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  const updateProfile = async (data: { email?: string; address?: string }): Promise<boolean> => {
+    if (!currentUser) return false;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/users/${currentUser.id}/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const resData = await res.json();
+      if (!res.ok) {
+        showToast(resData.error || 'Failed to update profile', 'error');
+        setLoading(false);
+        return false;
+      }
+      showToast(resData.message || 'Profile updated successfully!', 'success');
+      if (resData.user) {
+        setCurrentUser(resData.user);
+        sessionStorage.setItem('deshi_bite_user', JSON.stringify(resData.user));
+      }
+      await refreshData();
+      setLoading(false);
+      return true;
+    } catch (e) {
+      showToast('Error connecting to server', 'error');
+      setLoading(false);
+      return false;
+    }
+  };
+
+  const changePassword = async (oldPassword: string, newPassword: string): Promise<boolean> => {
+    if (!currentUser) return false;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          oldPassword,
+          newPassword,
+        }),
+      });
+      const resData = await res.json();
+      if (!res.ok) {
+        showToast(resData.error || 'Failed to change password', 'error');
+        setLoading(false);
+        return false;
+      }
+      showToast(resData.message || 'Password changed successfully!', 'success');
+      setLoading(false);
+      return true;
+    } catch (e) {
+      showToast('Error connecting to server', 'error');
+      setLoading(false);
+      return false;
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -672,6 +733,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         markNotificationsAsRead,
         syncWithGoogleSheets,
         updateSettings,
+        updateProfile,
+        changePassword,
         refreshData,
       }}
     >

@@ -354,9 +354,75 @@ async function startServer() {
       return res.status(400).json({ error: 'Current password does not match' });
     }
 
-    user.passwordHash = newPassword;
+    if (!newPassword || newPassword.trim().length < 4) {
+      return res.status(400).json({ error: 'New password must be at least 4 characters long' });
+    }
+
+    user.passwordHash = newPassword.trim();
     saveDatabase(db);
+    syncToMongo(async () => {
+      await mongoUpsert('users', user.id, user);
+    });
+
+    const dt = getBangladeshDateTime();
+    db.logs.unshift({
+      id: `LOG-${Date.now()}`,
+      user: user.name,
+      role: user.role,
+      action: 'Password Changed',
+      referenceId: user.id,
+      details: `${user.role} (${user.name}) updated account password securely`,
+      date: dt.date,
+      time: dt.time,
+      timestamp: dt.timestamp,
+    });
+    saveDatabase(db);
+
     res.json({ success: true, message: 'Password updated successfully!' });
+  });
+
+  // Users: Update Profile (Address & Email - Name and Phone are strictly immutable)
+  app.put('/api/users/:id/profile', (req, res) => {
+    const { id } = req.params;
+    const { address, email } = req.body;
+    const user = db.users.find((u) => u.id === id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Name and phone are strictly IMMUTABLE as requested
+    if (address !== undefined) {
+      user.address = String(address).trim();
+    }
+    if (email !== undefined) {
+      user.email = String(email).trim();
+    }
+
+    saveDatabase(db);
+    syncToMongo(async () => {
+      await mongoUpsert('users', user.id, user);
+    });
+
+    const dt = getBangladeshDateTime();
+    db.logs.unshift({
+      id: `LOG-${Date.now()}`,
+      user: user.name,
+      role: user.role,
+      action: 'Profile Updated',
+      referenceId: user.id,
+      details: `${user.name} updated profile details (address / email)`,
+      date: dt.date,
+      time: dt.time,
+      timestamp: dt.timestamp,
+    });
+    saveDatabase(db);
+
+    const { passwordHash, ...safeUser } = user;
+    res.json({
+      success: true,
+      message: 'Profile details updated successfully!',
+      user: safeUser,
+    });
   });
 
   // Agents: Update status (Approve, Reject, Suspend, Activate)
