@@ -20,6 +20,9 @@ export const DueView: React.FC = () => {
 
   // Relevant payments
   const relevantPayments = isAdmin ? payments : payments.filter((p) => p.agentId === currentUser?.id);
+  const agentClearedPayments = currentUser?.totalPaid !== undefined
+    ? currentUser.totalPaid
+    : relevantPayments.reduce((acc, p) => acc + p.amount, 0);
 
   const handleOpenPaymentForAgent = (agent: any) => {
     setSelectedAgentForPayment(agent);
@@ -77,29 +80,43 @@ export const DueView: React.FC = () => {
         <div className="bg-white p-5 rounded-2xl border border-purple-100/80 shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">
-              Total Cleared Payments
+              {isAdmin ? 'Total Cleared Payments' : 'My Cleared Payments'}
             </span>
             <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
               <ShieldCheck className="w-4 h-4" />
             </div>
           </div>
           <div className="text-2xl sm:text-3xl font-extrabold text-emerald-700">
-            ৳{totalClearedPayments.toLocaleString()}
+            ৳{(isAdmin ? totalClearedPayments : agentClearedPayments).toLocaleString()}
           </div>
-          <p className="text-[11px] text-slate-600 mt-1">Settled & deposited into business accounts</p>
+          <p className="text-[11px] text-slate-600 mt-1">
+            {isAdmin ? 'Settled & deposited into business accounts' : 'Payments verified & cleared by Admin'}
+          </p>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-purple-100/80 shadow-xs">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider">Payment Status</span>
+            <span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider">
+              {isAdmin ? 'Payment Status' : 'Account Standing'}
+            </span>
             <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
           <div className="text-xl sm:text-2xl font-extrabold text-slate-900">
-            {isAdmin ? 'Reconciliation Active' : 'Account Good Standing'}
+            {isAdmin
+              ? 'Reconciliation Active'
+              : (currentUser?.currentDue || 0) > 0
+              ? 'Due Settlement Pending'
+              : 'Account Good Standing'}
           </div>
-          <p className="text-[11px] text-slate-600 mt-1">Double-entry ledger accuracy</p>
+          <p className="text-[11px] text-slate-600 mt-1">
+            {isAdmin
+              ? 'Double-entry ledger accuracy'
+              : (currentUser?.currentDue || 0) > 0
+              ? 'Outstanding balance payable to Admin'
+              : 'Zero outstanding dues'}
+          </p>
         </div>
       </div>
 
