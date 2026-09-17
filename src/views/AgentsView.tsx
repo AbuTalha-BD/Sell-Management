@@ -1,0 +1,185 @@
+import React, { useState, useMemo } from 'react';
+import { useApp } from '../context/AppContext';
+import { Users, UserCheck, UserX, DollarSign, ShieldAlert, CheckCircle2, Clock } from 'lucide-react';
+
+export const AgentsView: React.FC = () => {
+  const { users, updateAgentStatus, setIsPaymentModalOpen, setSelectedAgentForPayment } = useApp();
+
+  const [filter, setFilter] = useState<'ALL' | 'ACTIVE' | 'PENDING' | 'SUSPENDED'>('ALL');
+
+  const agentUsers = useMemo(() => {
+    return users
+      .filter((u) => u.role === 'AGENT')
+      .filter((u) => {
+        if (filter === 'ALL') return true;
+        return u.status === filter;
+      });
+  }, [users, filter]);
+
+  const activeCount = users.filter((u) => u.role === 'AGENT' && u.status === 'ACTIVE').length;
+  const pendingCount = users.filter((u) => u.role === 'AGENT' && u.status === 'PENDING').length;
+  const totalDue = users.filter((u) => u.role === 'AGENT').reduce((acc, u) => acc + u.currentDue, 0);
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Sales Agents Management</h2>
+          <p className="text-xs text-slate-600 font-medium">
+            Review new agent registrations, enforce status controls, and audit collections
+          </p>
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-2xl border border-purple-100/80 shadow-xs">
+          <span className="text-[11px] font-bold text-slate-600 uppercase">Active Sales Agents</span>
+          <div className="text-2xl font-extrabold text-slate-900 mt-1">{activeCount} Agents</div>
+          <p className="text-[11px] text-slate-600 mt-0.5">Authorized to record orders</p>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-purple-100/80 shadow-xs">
+          <span className="text-[11px] font-bold text-amber-700 uppercase">Pending Registrations</span>
+          <div
+            className={`text-2xl font-extrabold mt-1 ${
+              pendingCount > 0 ? 'text-amber-600 animate-pulse' : 'text-slate-900'
+            }`}
+          >
+            {pendingCount} Pending
+          </div>
+          <p className="text-[11px] text-slate-600 mt-0.5">Awaiting Administrator review</p>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-rose-100 shadow-xs">
+          <span className="text-[11px] font-bold text-rose-600 uppercase">Total Outstanding Due</span>
+          <div className="text-2xl font-extrabold text-rose-600 mt-1">৳{totalDue.toLocaleString()}</div>
+          <p className="text-[11px] text-slate-600 mt-0.5">Cumulative agent balance</p>
+        </div>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-purple-100/80 shadow-xs w-fit">
+        {(['ALL', 'ACTIVE', 'PENDING', 'SUSPENDED'] as const).map((mode) => (
+          <button
+            key={mode}
+            onClick={() => setFilter(mode)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              filter === mode
+                ? 'bg-purple-700 text-white shadow-2xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            {mode === 'ALL'
+              ? 'All Agents'
+              : mode === 'ACTIVE'
+              ? 'Active'
+              : mode === 'PENDING'
+              ? `Pending (${pendingCount})`
+              : 'Suspended'}
+          </button>
+        ))}
+      </div>
+
+      {/* Agents Table */}
+      <div className="bg-white rounded-3xl border border-purple-100/80 shadow-xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left">
+            <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+              <tr>
+                <th className="py-3 px-4">Agent Name</th>
+                <th className="py-3 px-4">Phone Number</th>
+                <th className="py-3 px-4">Address</th>
+                <th className="py-3 px-4 text-center">Status</th>
+                <th className="py-3 px-4 text-right">Current Due</th>
+                <th className="py-3 px-4 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {agentUsers.map((agent) => (
+                <tr key={agent.id} className="hover:bg-purple-50/20 transition-colors">
+                  <td className="py-3 px-4">
+                    <div className="font-extrabold text-slate-900 text-sm">{agent.name}</div>
+                    <div className="text-[10px] text-slate-600">Joined: {agent.createdAt}</div>
+                  </td>
+
+                  <td className="py-3 px-4 font-mono font-medium text-slate-800">{agent.phone}</td>
+
+                  <td className="py-3 px-4 text-slate-600">{agent.address || 'Dhaka, Bangladesh'}</td>
+
+                  <td className="py-3 px-4 text-center">
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        agent.status === 'ACTIVE'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : agent.status === 'PENDING'
+                          ? 'bg-amber-100 text-amber-800 animate-pulse'
+                          : 'bg-rose-100 text-rose-800'
+                      }`}
+                    >
+                      {agent.status === 'ACTIVE' && <CheckCircle2 className="w-3 h-3" />}
+                      {agent.status === 'PENDING' && <Clock className="w-3 h-3" />}
+                      {agent.status === 'SUSPENDED' && <ShieldAlert className="w-3 h-3" />}
+                      <span>{agent.status}</span>
+                    </span>
+                  </td>
+
+                  <td className="py-3 px-4 text-right font-extrabold text-rose-600 text-sm">
+                    ৳{agent.currentDue.toLocaleString()}
+                  </td>
+
+                  <td className="py-3 px-4 text-center">
+                    <div className="flex items-center justify-center gap-1.5">
+                      {agent.status === 'PENDING' ? (
+                        <>
+                          <button
+                            onClick={() => updateAgentStatus(agent.id, 'ACTIVE')}
+                            className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors cursor-pointer"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => updateAgentStatus(agent.id, 'REJECTED')}
+                            className="px-3 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition-colors cursor-pointer"
+                          >
+                            Reject
+                          </button>
+                        </>
+                      ) : agent.status === 'ACTIVE' ? (
+                        <>
+                          <button
+                            onClick={() => {
+                              setSelectedAgentForPayment(agent);
+                              setIsPaymentModalOpen(true);
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs transition-colors cursor-pointer"
+                          >
+                            Record Payment
+                          </button>
+                          <button
+                            onClick={() => updateAgentStatus(agent.id, 'SUSPENDED')}
+                            className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 font-medium text-xs transition-colors cursor-pointer"
+                          >
+                            Suspend
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => updateAgentStatus(agent.id, 'ACTIVE')}
+                          className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors cursor-pointer"
+                        >
+                          Re-activate
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
