@@ -1,5 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
+import { Sale } from '../types';
 import {
   TrendingUp,
   Calendar,
@@ -19,27 +20,56 @@ export const StatCards: React.FC = () => {
   // Filter sales for this agent if Agent
   const relevantSales = isAdmin ? sales : sales.filter((s) => s.agentId === currentUser?.id);
 
-  // Today's Sales calculation (Date Asia/Dhaka matches)
+  // Accurate Today, Week, and Month calculations in Asia/Dhaka timezone
+  const now = Date.now();
   const todayDhaka = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Asia/Dhaka',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-  }).format(new Date());
+  }).format(new Date(now));
+
+  const isSaleToday = (s: Sale) => {
+    if (s.createdAtDate === todayDhaka) return true;
+    if (s.timestamp && !isNaN(s.timestamp)) {
+      const saleDate = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Dhaka',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).format(new Date(s.timestamp));
+      return saleDate === todayDhaka;
+    }
+    return false;
+  };
 
   const todaySales = relevantSales
-    .filter((s) => s.createdAtDate === todayDhaka || s.createdAtDate === '16 September 2026')
+    .filter(isSaleToday)
     .reduce((acc, s) => acc + s.grandTotal, 0);
 
-  // Week Sales (last 7 days)
-  const now = Date.now();
+  // Week Sales (rolling last 7 days)
   const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const isSaleThisWeek = (s: Sale) => {
+    if (s.timestamp && !isNaN(s.timestamp)) {
+      return s.timestamp >= sevenDaysAgo;
+    }
+    return isSaleToday(s);
+  };
+
   const weekSales = relevantSales
-    .filter((s) => s.timestamp >= sevenDaysAgo || s.createdAtDate.includes('September 2026'))
+    .filter(isSaleThisWeek)
     .reduce((acc, s) => acc + s.grandTotal, 0);
 
-  // Month Sales
-  const monthSales = relevantSales.reduce((acc, s) => acc + s.grandTotal, 0);
+  // Month Sales (current calendar month in Asia/Dhaka)
+  const currentMonthYear = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Dhaka',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(now));
+
+  const monthSales = relevantSales
+    .filter((s) => s.createdAtDate?.includes(currentMonthYear))
+    .reduce((acc, s) => acc + s.grandTotal, 0);
 
   // Total Lifetime Sales
   const totalSales = relevantSales.reduce((acc, s) => acc + s.grandTotal, 0);

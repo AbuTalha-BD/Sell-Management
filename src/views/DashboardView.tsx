@@ -88,38 +88,40 @@ export const DashboardView: React.FC = () => {
       {/* Numerical Stat Cards */}
       <StatCards />
 
-      {/* MongoDB Cloud Database Persistence Indicator */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-50/70 via-teal-50/50 to-white border border-emerald-200/70 shadow-2xs text-xs">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-            <Database className="w-4 h-4" />
+      {/* MongoDB Cloud Database Persistence Indicator - Admin Only */}
+      {isAdmin && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-50/70 via-teal-50/50 to-white border border-emerald-200/70 shadow-2xs text-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+              <Database className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="font-bold text-slate-800 mr-2">
+                Cloud Database Engine:
+              </span>
+              <span className="text-slate-600 font-medium">
+                {mongoStatus?.connected ? (
+                  <span className="text-emerald-800 font-bold inline-flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    MongoDB Atlas Cloud (DB: {mongoStatus.database}) • Real-time Sync Active
+                  </span>
+                ) : (
+                  <span className="text-slate-600">
+                    Local Memory & Storage Mode (MongoDB Atlas Driver Ready)
+                  </span>
+                )}
+              </span>
+            </div>
           </div>
-          <div>
-            <span className="font-bold text-slate-800 mr-2">
-              Cloud Database Engine:
-            </span>
-            <span className="text-slate-600 font-medium">
-              {mongoStatus?.connected ? (
-                <span className="text-emerald-800 font-bold inline-flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  MongoDB Atlas Cloud (DB: {mongoStatus.database}) • Real-time Sync Active
-                </span>
-              ) : (
-                <span className="text-slate-600">
-                  Local Memory & Storage Mode (MongoDB Atlas Driver Ready)
-                </span>
-              )}
-            </span>
-          </div>
+          <button
+            onClick={() => setIsMongoModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-emerald-50 text-emerald-800 font-bold rounded-xl border border-emerald-300 shadow-2xs transition-colors cursor-pointer w-fit"
+          >
+            <Cloud className="w-3.5 h-3.5" />
+            <span>{mongoStatus?.connected ? 'Manage MongoDB Atlas' : 'Connect MongoDB Atlas'}</span>
+          </button>
         </div>
-        <button
-          onClick={() => setIsMongoModalOpen(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-emerald-50 text-emerald-800 font-bold rounded-xl border border-emerald-300 shadow-2xs transition-colors cursor-pointer w-fit"
-        >
-          <Cloud className="w-3.5 h-3.5" />
-          <span>{mongoStatus?.connected ? 'Manage MongoDB Atlas' : 'Connect MongoDB Atlas'}</span>
-        </button>
-      </div>
+      )}
 
       {/* Grid: Weekly Chart & Side Panels */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
