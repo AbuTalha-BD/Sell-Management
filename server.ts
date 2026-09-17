@@ -52,28 +52,52 @@ if (!fs.existsSync(DB_DIR)) {
 
 // Load or initialize DB
 function loadDatabase(): DatabaseSchema {
+  let loaded: DatabaseSchema | null = null;
   if (fs.existsSync(DB_FILE)) {
     try {
       const content = fs.readFileSync(DB_FILE, 'utf-8');
-      return JSON.parse(content);
+      loaded = JSON.parse(content);
     } catch (e) {
       console.error('Error reading db file, restoring defaults:', e);
     }
   }
 
-  const initialDb: DatabaseSchema = {
-    products: INITIAL_PRODUCTS,
-    users: INITIAL_USERS,
-    sales: INITIAL_SALES,
-    stockTransactions: INITIAL_STOCK_TRANSACTIONS,
-    payments: INITIAL_PAYMENTS,
-    notifications: INITIAL_NOTIFICATIONS,
-    logs: INITIAL_LOGS,
-    settings: INITIAL_SETTINGS,
-  };
+  if (!loaded) {
+    const initialDb: DatabaseSchema = {
+      products: INITIAL_PRODUCTS,
+      users: INITIAL_USERS,
+      sales: INITIAL_SALES,
+      stockTransactions: INITIAL_STOCK_TRANSACTIONS,
+      payments: INITIAL_PAYMENTS,
+      notifications: INITIAL_NOTIFICATIONS,
+      logs: INITIAL_LOGS,
+      settings: INITIAL_SETTINGS,
+    };
 
-  saveDatabase(initialDb);
-  return initialDb;
+    saveDatabase(initialDb);
+    return initialDb;
+  }
+
+  // Purge any rejected agents so admin panel never shows them
+  if (loaded.users) {
+    loaded.users = loaded.users.filter((u) => u.status !== 'REJECTED');
+  }
+
+  // Ensure default low stock alert for KG is 0.5 instead of 5
+  if (loaded.products) {
+    loaded.products.forEach((p) => {
+      if (p.lowStockThresholdKg === 5) {
+        p.lowStockThresholdKg = 0.5;
+      }
+    });
+  }
+
+  if (loaded.settings && (loaded.settings.lowStockDefaultKg === 5 || !loaded.settings.lowStockDefaultKg)) {
+    loaded.settings.lowStockDefaultKg = 0.5;
+  }
+
+  saveDatabase(loaded);
+  return loaded;
 }
 
 function saveDatabase(newDb: DatabaseSchema) {
@@ -339,14 +363,34 @@ async function startServer() {
   app.put('/api/agents/:id/status', (req, res) => {
     const { id } = req.params;
     const { status, adminName } = req.body;
-    const agent = db.users.find((u) => u.id === id);
+    const agentIndex = db.users.findIndex((u) => u.id === id);
 
-    if (!agent) {
+    if (agentIndex === -1) {
       return res.status(404).json({ error: 'Agent not found' });
     }
 
-    agent.status = status;
+    const agent = db.users[agentIndex];
     const dt = getBangladeshDateTime();
+
+    if (status === 'REJECTED') {
+      // User directive: Rejecting an agent must completely remove them from the admin panel
+      db.users.splice(agentIndex, 1);
+      db.logs.unshift({
+        id: `LOG-${Date.now()}`,
+        user: adminName || 'Admin Manager',
+        role: 'ADMIN',
+        action: 'Agent Application Rejected',
+        referenceId: id,
+        details: `${agent.name} (${agent.phone}) registration was rejected and removed from system`,
+        date: dt.date,
+        time: dt.time,
+        timestamp: dt.timestamp,
+      });
+      saveDatabase(db);
+      return res.json({ success: true, message: 'Agent registration rejected and removed from admin portal', removedId: id });
+    }
+
+    agent.status = status;
 
     // Log
     db.logs.unshift({
@@ -363,6 +407,32 @@ async function startServer() {
 
     saveDatabase(db);
     res.json({ success: true, agent });
+  });
+
+  // Agents: Delete / Remove
+  app.delete('/api/agents/:id', (req, res) => {
+    const { id } = req.params;
+    const index = db.users.findIndex((u) => u.id === id);
+    if (index === -1) return res.status(404).json({ error: 'Agent not found' });
+
+    const agent = db.users[index];
+    db.users.splice(index, 1);
+
+    const dt = getBangladeshDateTime();
+    db.logs.unshift({
+      id: `LOG-${Date.now()}`,
+      user: 'Admin Manager',
+      role: 'ADMIN',
+      action: 'Agent Removed',
+      referenceId: id,
+      details: `Removed agent "${agent.name}" (${id})`,
+      date: dt.date,
+      time: dt.time,
+      timestamp: dt.timestamp,
+    });
+
+    saveDatabase(db);
+    res.json({ success: true, message: `Agent "${agent.name}" removed successfully`, removedId: id });
   });
 
   // Products: Add
@@ -394,7 +464,7 @@ async function startServer() {
       wholesalePricePcs: wholesalePricePcs ? Number(wholesalePricePcs) : null,
       stockKg: Number(stockKg) || 0,
       stockPcs: Number(stockPcs) || 0,
-      lowStockThresholdKg: Number(lowStockThresholdKg) || 5,
+      lowStockThresholdKg: lowStockThresholdKg !== undefined && lowStockThresholdKg !== '' ? Number(lowStockThresholdKg) : 0.5,
       lowStockThresholdPcs: Number(lowStockThresholdPcs) || 20,
       active: active !== undefined ? active : true,
       updatedAt: dt.date,
@@ -450,7 +520,7 @@ async function startServer() {
       wholesalePricePcs: req.body.wholesalePricePcs !== undefined ? (req.body.wholesalePricePcs ? Number(req.body.wholesalePricePcs) : null) : prod.wholesalePricePcs,
       stockKg: req.body.stockKg !== undefined ? Number(req.body.stockKg) : prod.stockKg,
       stockPcs: req.body.stockPcs !== undefined ? Number(req.body.stockPcs) : prod.stockPcs,
-      lowStockThresholdKg: req.body.lowStockThresholdKg !== undefined ? Number(req.body.lowStockThresholdKg) : prod.lowStockThresholdKg,
+      lowStockThresholdKg: req.body.lowStockThresholdKg !== undefined && req.body.lowStockThresholdKg !== '' ? Number(req.body.lowStockThresholdKg) : prod.lowStockThresholdKg,
       lowStockThresholdPcs: req.body.lowStockThresholdPcs !== undefined ? Number(req.body.lowStockThresholdPcs) : prod.lowStockThresholdPcs,
       active: req.body.active !== undefined ? Boolean(req.body.active) : prod.active,
       updatedAt: dt.date,
@@ -470,6 +540,32 @@ async function startServer() {
 
     saveDatabase(db);
     res.json({ success: true, product: prod });
+  });
+
+  // Products: Delete
+  app.delete('/api/products/:id', (req, res) => {
+    const { id } = req.params;
+    const index = db.products.findIndex((p) => p.id === id);
+    if (index === -1) return res.status(404).json({ error: 'Product not found' });
+
+    const prod = db.products[index];
+    db.products.splice(index, 1);
+
+    const dt = getBangladeshDateTime();
+    db.logs.unshift({
+      id: `LOG-${Date.now()}`,
+      user: 'Admin Manager',
+      role: 'ADMIN',
+      action: 'Product Deleted',
+      referenceId: id,
+      details: `Deleted product "${prod.name}" (${id})`,
+      date: dt.date,
+      time: dt.time,
+      timestamp: dt.timestamp,
+    });
+
+    saveDatabase(db);
+    res.json({ success: true, message: `Product "${prod.name}" deleted successfully`, deletedId: id });
   });
 
   // Sales: Create Sale (Atomic Transaction)

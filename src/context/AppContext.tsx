@@ -96,6 +96,8 @@ interface AppContextType {
     referenceNote?: string;
   }) => Promise<boolean>;
   saveProduct: (prodData: Partial<Product>) => Promise<boolean>;
+  deleteProduct: (productId: string) => Promise<boolean>;
+  deleteAgent: (agentId: string) => Promise<boolean>;
   recordStockChange: (data: {
     productId: string;
     type: StockTransactionType;
@@ -441,6 +443,54 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  const deleteProduct = async (productId: string): Promise<boolean> => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/products/${productId}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || 'Failed to delete product', 'error');
+        setLoading(false);
+        return false;
+      }
+      showToast(data.message || 'Product deleted successfully!', 'success');
+      setProducts((prev) => prev.filter((p) => p.id !== productId));
+      await refreshData();
+      setLoading(false);
+      return true;
+    } catch (e) {
+      showToast('Error connecting to server', 'error');
+      setLoading(false);
+      return false;
+    }
+  };
+
+  const deleteAgent = async (agentId: string): Promise<boolean> => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/agents/${agentId}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || 'Failed to remove agent', 'error');
+        setLoading(false);
+        return false;
+      }
+      showToast(data.message || 'Agent removed successfully!', 'success');
+      setUsers((prev) => prev.filter((u) => u.id !== agentId));
+      await refreshData();
+      setLoading(false);
+      return true;
+    } catch (e) {
+      showToast('Error connecting to server', 'error');
+      setLoading(false);
+      return false;
+    }
+  };
+
   const recordStockChange = async (data: {
     productId: string;
     type: StockTransactionType;
@@ -488,7 +538,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setLoading(false);
         return false;
       }
-      showToast(`Agent status updated to ${status}`, 'success');
+      if (status === 'REJECTED') {
+        showToast('Agent registration rejected and removed from system', 'info');
+        setUsers((prev) => prev.filter((u) => u.id !== agentId));
+      } else {
+        showToast(`Agent status updated to ${status}`, 'success');
+      }
       await refreshData();
       setLoading(false);
       return true;
@@ -610,6 +665,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         createSale,
         recordPayment,
         saveProduct,
+        deleteProduct,
+        deleteAgent,
         recordStockChange,
         updateAgentStatus,
         markNotificationsAsRead,
