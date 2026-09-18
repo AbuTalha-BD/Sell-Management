@@ -239,35 +239,36 @@ export const SellModal: React.FC = () => {
   if (!isSellModalOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white rounded-3xl w-full max-w-3xl shadow-2xl border border-purple-100 overflow-hidden my-auto max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-3xl w-full max-w-3xl shadow-2xl border border-purple-100 overflow-hidden my-auto max-h-[94vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-purple-50/40">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-700 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-purple-500/20">
-              <ShoppingBag className="w-5 h-5" />
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 bg-purple-50/40 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-purple-700 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-purple-500/20 shrink-0">
+              <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-extrabold text-slate-900">New Sale / Order Entry</h2>
+              <h2 className="text-base sm:text-lg font-extrabold text-slate-900">New Sale / Order Entry</h2>
               <p className="text-xs text-slate-600 font-medium">Agent: {currentUser?.name}</p>
             </div>
           </div>
           <button
             onClick={() => setIsSellModalOpen(false)}
-            className="p-2 rounded-xl text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-1.5 sm:p-2 rounded-xl text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="p-6 overflow-y-auto space-y-6 flex-1 text-slate-800">
+        <div className="p-3.5 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6 flex-1 text-slate-800">
           {/* STEP 1: SELECT SALE TYPE */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
               STEP 1: SELECT SALE TYPE
             </label>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
               {/* Retail */}
               <button
                 type="button"
@@ -275,22 +276,29 @@ export const SellModal: React.FC = () => {
                   setSaleType('RETAIL');
                   setSelectedProduct(null);
                 }}
-                className={`flex items-center gap-3.5 p-4 rounded-2xl border-2 transition-all text-left cursor-pointer ${
+                className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3.5 p-3 sm:p-4 rounded-2xl border-2 transition-all text-left cursor-pointer overflow-hidden ${
                   saleType === 'RETAIL'
-                    ? 'border-purple-600 bg-purple-50/60 shadow-sm'
+                    ? 'border-purple-600 bg-purple-50/70 shadow-sm'
                     : 'border-slate-200 hover:border-slate-300 bg-white'
                 }`}
               >
                 <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                    saleType === 'RETAIL' ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-600'
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                    saleType === 'RETAIL' ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600'
                   }`}
                 >
-                  <Store className="w-5 h-5" />
+                  <Store className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div>
-                  <div className="text-sm font-bold text-slate-900">RETAIL (খুচরা)</div>
-                  <div className="text-[11px] text-slate-600">Regular consumer price</div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs sm:text-sm font-extrabold text-slate-900 leading-tight">
+                    RETAIL{' '}
+                    <span className="text-[11px] sm:text-xs font-semibold text-purple-700 block sm:inline">
+                      (খুচরা)
+                    </span>
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] text-slate-500 leading-snug mt-0.5">
+                    Regular consumer price
+                  </div>
                 </div>
               </button>
 
@@ -301,22 +309,29 @@ export const SellModal: React.FC = () => {
                   setSaleType('WHOLESALE');
                   setSelectedProduct(null);
                 }}
-                className={`flex items-center gap-3.5 p-4 rounded-2xl border-2 transition-all text-left cursor-pointer ${
+                className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3.5 p-3 sm:p-4 rounded-2xl border-2 transition-all text-left cursor-pointer overflow-hidden ${
                   saleType === 'WHOLESALE'
-                    ? 'border-purple-600 bg-purple-50/60 shadow-sm'
+                    ? 'border-purple-600 bg-purple-50/70 shadow-sm'
                     : 'border-slate-200 hover:border-slate-300 bg-white'
                 }`}
               >
                 <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                    saleType === 'WHOLESALE' ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-600'
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                    saleType === 'WHOLESALE' ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600'
                   }`}
                 >
-                  <Building2 className="w-5 h-5" />
+                  <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div>
-                  <div className="text-sm font-bold text-slate-900">WHOLESALE (পাইকারি)</div>
-                  <div className="text-[11px] text-slate-600">Bulk store dealer price</div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs sm:text-sm font-extrabold text-slate-900 leading-tight">
+                    WHOLESALE{' '}
+                    <span className="text-[11px] sm:text-xs font-semibold text-purple-700 block sm:inline">
+                      (পাইকারি)
+                    </span>
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] text-slate-500 leading-snug mt-0.5">
+                    Bulk store dealer price
+                  </div>
                 </div>
               </button>
             </div>
@@ -599,20 +614,20 @@ export const SellModal: React.FC = () => {
         </div>
 
         {/* Modal Footer */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-t border-slate-100 bg-slate-50/80">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-5 border-t border-slate-100 bg-slate-50/90 shrink-0">
+          <div className="flex items-baseline justify-between sm:justify-start">
             <span className="text-xs font-bold text-slate-600 uppercase">GRAND TOTAL: </span>
-            <span className="text-xl sm:text-2xl font-extrabold text-purple-700 ml-1">
+            <span className="text-xl sm:text-2xl font-extrabold text-purple-700 ml-1.5">
               ৳{grandTotal.toLocaleString()}
             </span>
-            <span className="text-xs text-slate-600 ml-2 font-medium">({saleItems.length} items)</span>
+            <span className="text-xs text-slate-500 ml-2 font-medium">({saleItems.length} items)</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={() => setIsSellModalOpen(false)}
-              className="px-4 py-2.5 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200/60 rounded-xl transition-colors cursor-pointer"
+              className="px-3.5 py-2.5 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200/60 rounded-xl transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -621,10 +636,10 @@ export const SellModal: React.FC = () => {
               type="button"
               onClick={handleProceedToConfirm}
               disabled={saleItems.length === 0}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer whitespace-nowrap"
             >
               <span>Review & Confirm Sale</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 shrink-0" />
             </button>
           </div>
         </div>
