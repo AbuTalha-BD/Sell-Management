@@ -203,15 +203,41 @@ export const StockModal: React.FC = () => {
               </label>
               <input
                 type="number"
-                step={unit === 'KG' ? '0.5' : '1'}
-                min="0.1"
+                step="any"
+                min="0.001"
                 required
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                placeholder="e.g. 10"
+                placeholder={unit === 'KG' ? 'e.g. 3, 3.4, 5' : 'e.g. 3, 10, 50'}
                 className="w-full px-3 py-2 text-xs font-bold rounded-xl border border-slate-200 focus:outline-hidden focus:border-purple-500 bg-white"
               />
             </div>
+          </div>
+
+          {/* Quick Quantity Presets */}
+          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+            <span className="text-[10px] text-slate-600 font-bold uppercase">Quick Add:</span>
+            {unit === 'KG'
+              ? [1, 2, 3, 3.4, 5, 10].map((val) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setQuantity(String(val))}
+                    className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/60 transition-colors cursor-pointer"
+                  >
+                    {val} KG
+                  </button>
+                ))
+              : [1, 3, 5, 10, 25, 50].map((val) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setQuantity(String(val))}
+                    className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/60 transition-colors cursor-pointer"
+                  >
+                    {val} PCS
+                  </button>
+                ))}
           </div>
 
           {/* Reference Note */}

@@ -795,13 +795,13 @@ async function startServer() {
     if (unit === 'KG') {
       if (type === 'STOCK_IN' || type === 'RETURN') {
         prod.stockKg = Number((prod.stockKg + numQty).toFixed(3));
-      } else if (type === 'SALE_OUT' || type === 'ADJUSTMENT') {
-        prod.stockKg = Number((prod.stockKg - numQty).toFixed(3));
+      } else if (type === 'STOCK_OUT' || type === 'SALE_OUT' || type === 'ADJUSTMENT') {
+        prod.stockKg = Math.max(0, Number((prod.stockKg - numQty).toFixed(3)));
       }
     } else {
       if (type === 'STOCK_IN' || type === 'RETURN') {
         prod.stockPcs += Math.round(numQty);
-      } else if (type === 'SALE_OUT' || type === 'ADJUSTMENT') {
+      } else if (type === 'STOCK_OUT' || type === 'SALE_OUT' || type === 'ADJUSTMENT') {
         prod.stockPcs = Math.max(0, prod.stockPcs - Math.round(numQty));
       }
     }

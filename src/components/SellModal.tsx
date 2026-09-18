@@ -448,12 +448,12 @@ export const SellModal: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
-                      step={selectedUnit === 'KG' ? '0.25' : '1'}
-                      min={selectedUnit === 'KG' ? '0.1' : '1'}
+                      step="any"
+                      min="0.01"
                       value={quantity || ''}
                       onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)}
                       className="w-full px-3 py-2 text-sm font-bold rounded-xl border border-slate-300 focus:outline-hidden focus:border-purple-500 focus:ring-1 focus:ring-purple-500 bg-white"
-                      placeholder="e.g. 1"
+                      placeholder={selectedUnit === 'KG' ? 'e.g. 3.4 or 5' : 'e.g. 10 or 25'}
                     />
                     <span className="text-xs font-extrabold text-purple-800 shrink-0">{selectedUnit}</span>
                   </div>
