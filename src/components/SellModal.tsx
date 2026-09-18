@@ -526,52 +526,107 @@ export const SellModal: React.FC = () => {
 
           {/* CURRENT SALE ITEMS LIST */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
-              CURRENT SALE ITEMS ({saleItems.length})
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600">
+                CURRENT SALE ITEMS ({saleItems.length})
+              </label>
+              {saleItems.length > 0 && (
+                <span className="text-[11px] font-bold text-purple-700 sm:hidden">
+                  ৳{grandTotal.toLocaleString()}
+                </span>
+              )}
+            </div>
 
             {saleItems.length === 0 ? (
               <div className="p-6 rounded-2xl border border-dashed border-slate-200 text-center text-xs text-slate-600 bg-slate-50/50">
                 No products added yet. Select a product above and click "+ ADD PRODUCT"
               </div>
             ) : (
-              <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
-                <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
-                    <tr>
-                      <th className="py-2.5 px-3">Product</th>
-                      <th className="py-2.5 px-3">Unit</th>
-                      <th className="py-2.5 px-3 text-right">Quantity</th>
-                      <th className="py-2.5 px-3 text-right">Unit Price</th>
-                      <th className="py-2.5 px-3 text-right">Subtotal</th>
-                      <th className="py-2.5 px-3 text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {saleItems.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50/70">
-                        <td className="py-2.5 px-3 font-semibold text-slate-900">{item.productName}</td>
-                        <td className="py-2.5 px-3 font-medium text-slate-600">{item.unit}</td>
-                        <td className="py-2.5 px-3 text-right font-bold text-slate-900">
-                          {item.quantity} {item.unit}
-                        </td>
-                        <td className="py-2.5 px-3 text-right text-slate-600">৳{item.unitPrice}</td>
-                        <td className="py-2.5 px-3 text-right font-extrabold text-purple-700">
-                          ৳{item.subtotal.toLocaleString()}
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveItem(idx)}
-                            className="text-slate-600 hover:text-rose-600 p-1 rounded-md transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="space-y-2">
+                {/* Mobile View: Clean, 100% Responsive Item Cards (Prevents table truncation on small screens) */}
+                <div className="sm:hidden space-y-2">
+                  {saleItems.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col gap-2"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-bold text-slate-900 truncate">{item.productName}</div>
+                          <div className="text-[11px] text-slate-500 font-medium">
+                            Rate: <span className="font-semibold text-slate-700">৳{item.unitPrice}</span> / {item.unit}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveItem(idx)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
+                          aria-label="Remove item"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-200/70 text-xs">
+                        <div className="flex items-center gap-1.5 text-slate-700">
+                          <span className="text-[11px] text-slate-500">Qty:</span>
+                          <span className="font-extrabold text-slate-900 bg-white px-2 py-0.5 rounded-md border border-slate-200 text-[11px]">
+                            {item.quantity} {item.unit}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] text-slate-500 font-bold uppercase mr-1.5">Subtotal:</span>
+                          <span className="font-black text-purple-700 text-sm">
+                            ৳{item.subtotal.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Tablet & Desktop View: Clean Table with horizontal scroll safety */}
+                <div className="hidden sm:block border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                        <tr>
+                          <th className="py-2.5 px-3">Product</th>
+                          <th className="py-2.5 px-3">Unit</th>
+                          <th className="py-2.5 px-3 text-right">Quantity</th>
+                          <th className="py-2.5 px-3 text-right">Unit Price</th>
+                          <th className="py-2.5 px-3 text-right">Subtotal</th>
+                          <th className="py-2.5 px-3 text-center">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {saleItems.map((item, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50/70">
+                            <td className="py-2.5 px-3 font-semibold text-slate-900">{item.productName}</td>
+                            <td className="py-2.5 px-3 font-medium text-slate-600">{item.unit}</td>
+                            <td className="py-2.5 px-3 text-right font-bold text-slate-900">
+                              {item.quantity} {item.unit}
+                            </td>
+                            <td className="py-2.5 px-3 text-right text-slate-600">৳{item.unitPrice}</td>
+                            <td className="py-2.5 px-3 text-right font-extrabold text-purple-700">
+                              ৳{item.subtotal.toLocaleString()}
+                            </td>
+                            <td className="py-2.5 px-3 text-center">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveItem(idx)}
+                                className="text-slate-400 hover:text-rose-600 p-1.5 rounded-md hover:bg-rose-50 transition-colors cursor-pointer"
+                                title="Remove item"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             )}
           </div>
